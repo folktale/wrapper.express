@@ -1,0 +1,34 @@
+{
+  "name": "wrapper.express",
+  "version": "0.0.0",
+  "description": "Monadic wrapper over Express web framework.",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/folktale/wrapper.express"
+  },
+  "keywords": [
+    "fantasy-land",
+    "folktale"
+  ],
+  "author": "Quildreen Motta",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/folktale/wrapper.express/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "browserify": "^3.33.0",
+    "ink-docstrap": "git://github.com/robotlolita/docstrap",
+    "jsdoc": "^3.3.0-alpha5",
+    "hifive-tap": "^0.1.0",
+    "hifive": "^0.1.0",
+    "uglify-js": "^2.4.3",
+    "laws": "^0.2.1",
+    "alright": "^1.0.0",
+    "sweet.js": "^0.5.0"
+  }
+}
