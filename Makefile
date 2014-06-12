@@ -32,9 +32,11 @@ dist/$(PACKAGE).umd.min.js: dist/$(PACKAGE).umd.js
 
 $(LIB_DIR)/%.js: $(SRC_DIR)/%.sjs
 	mkdir -p $(dir $@)
-	$(sjs) --readable-names \
-	       --sourcemap      \
-	       --output $@      \
+	$(sjs) --readable-names           \
+	       --sourcemap                \
+	       --module adt-simple/macros \
+	       --module sparkler/macros   \
+	       --output $@                \
 	       $<
 
 $(TEST_BLD)/%.js: $(TEST_DIR)/%.sjs

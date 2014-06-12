@@ -13,7 +13,34 @@ Monadic wrapper over Express web framework.
 ## Example
 
 ```js
-( ... )
+var Future  = require('data.future')
+var Express = require('wrapper.express')(require('express'))
+
+var routes = [
+  Express.get('/:name', function(req) {
+    return new Future(function(reject, resolve) {
+      resolve(Express.send('Hello, ' + req.params.name))
+    })
+  })
+]
+
+var app = Express.create(routes)
+
+Express.listen(8080, app).fork(
+  function (error){ throw error }
+, function (addr) { console.log('Running on http://localhost:' + addr.port) }
+)
+```
+
+Or with Sweet.js macros:
+
+```js
+var routes = $routes(Express) {
+  get('/:name'): {name} => $do {
+    html <- Future.of('Hello, ' + name)
+    return Express.send(html)
+  }
+}
 ```
 
 
@@ -23,52 +50,6 @@ The easiest way is to grab it from NPM. If you're running in a Browser
 environment, you can use [Browserify][]
 
     $ npm install wrapper.express
-
-
-### Using with CommonJS
-
-If you're not using NPM, [Download the latest release][release], and require
-the `wrapper.express.umd.js` file:
-
-```js
-var express = require('wrapper.express')
-```
-
-
-### Using with AMD
-
-[Download the latest release][release], and require the `wrapper.express.umd.js`
-file:
-
-```js
-require(['wrapper.express'], function(express) {
-  ( ... )
-})
-```
-
-
-### Using without modules
-
-[Download the latest release][release], and load the `wrapper.express.umd.js`
-file. The properties are exposed in the global `folktale.wrapper.express` object:
-
-```html
-<script src="/path/to/wrapper.express.umd.js"></script>
-```
-
-
-### Compiling from source
-
-If you want to compile this library from the source, you'll need [Git][],
-[Make][], [Node.js][], and run the following commands:
-
-    $ git clone git://github.com/folktale/wrapper.express.git
-    $ cd wrapper.express
-    $ npm install
-    $ make bundle
-    
-This will generate the `dist/wrapper.express.umd.js` file, which you can load in
-any JavaScript environment.
 
     
 ## Documentation
@@ -81,12 +62,6 @@ You can [read the documentation online][docs] or build it yourself:
     $ make documentation
 
 Then open the file `docs/index.html` in your browser.
-
-
-## Platform support
-
-This library assumes an ES5 environment, but can be easily supported in ES3
-platforms by the use of shims. Just include [es5-shim][] :)
 
 
 ## Licence
