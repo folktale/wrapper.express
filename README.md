@@ -35,6 +35,8 @@ Express.listen(8080, app).fork(
 Or with Sweet.js macros:
 
 ```js
+var Express = require('wrapper.express')(require('express'));
+
 var routes = $routes(Express) {
   get('/:name'): {params:{ name }} => $do {
     html <- Future.of('Hello, ' + name)
