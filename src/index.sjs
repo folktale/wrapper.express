@@ -27,8 +27,9 @@
 
 // -- Dependencies -----------------------------------------------------
 var adt    = require('adt-simple')
-var curry  = require('core.lambda')
+var curry  = require('core.lambda').curry
 var Future = require('data.future')
+var extend = require('xtend')
 
 
 // -- Data structures --------------------------------------------------
@@ -80,6 +81,15 @@ function sendResponse(req, res){ return function {
   Send(status, headers, body) => _send(res, status, headers, body)
 }}
 
+// :: Server → Server
+function wrapServer(server) {
+  return { close: function() { return new Future(function(reject, resolve) {
+                    server.close(function(error) {
+                                   if (error)  reject(error)
+                                   else        resolve() }) })}
+         }
+}
+
 // :: ExpressResponse, Int, Object, Body → Void
 function _send(res, status, headers, body) {
   res.set(headers || {})
@@ -89,7 +99,7 @@ function _send(res, status, headers, body) {
 module.exports = function(express) {
 
   // :: Name → Value → Component
-  var set = Setting
+  var set = curry(2, Setting)
 
   // :: Name → Component
   function enable(name) {
@@ -103,10 +113,10 @@ module.exports = function(express) {
 
 
   // :: Path → (Request, ExpresResponse, (Any → Void) → Void) → Component
-  var plugin = Plugin
+  var plugin = curry(2, Plugin)
 
   // :: Method → RouteSpec → (Request → Future[Error, Response]) → Component
-  var route = Route
+  var route = curry(3, Route)
 
   // :: RouteSpec → (Request → Future[Error, Response]) → Component
   var get    = route('get')
@@ -122,14 +132,17 @@ module.exports = function(express) {
     Route(method, spec, handler) => Route(method, spec, wrapper(handler))
   }}
 
-  // :: Int → App → Future[Error, Address]
+  // :: Int → App → Future[Error, Server]
   function listen(port, server) { return new Future(function(reject, resolve) {
-    server.listen(port, function(error) {
-                          if (error)  reject(error)
-                          else        resolve(this.address()) })
+    var s = server.listen(port, function(error) {
+                                  if (error)  reject(error)
+                                  else        delayedResolve(this.address()) })
+
+    function delayedResolve(addr) { setTimeout(function() {
+      resolve(extend(wrapServer(s), { address: addr })) })}
   })}
 
-  // :: [Component] → App
+  // :: [Component] → Server
   function create(routes) {
     return routes.reduce(configure, express())
   }
@@ -142,9 +155,10 @@ module.exports = function(express) {
   }
 
   // :: Body → Response
-  var send     = Send(200, { 'Content-Type': 'text/html' })
-  var notFound = Send(404, { 'Content-Type': 'text/html' })
-  var fail     = Send(500, { 'Content-Type': 'text/html' })
+  var send     = curry(3, Send);
+  var success  = send(200, { 'Content-Type': 'text/html' })
+  var notFound = send(404, { 'Content-Type': 'text/html' })
+  var fail     = send(500, { 'Content-Type': 'text/html' })
 
   // :: URL → Response
   var redirect = Redirect
@@ -184,8 +198,9 @@ module.exports = function(express) {
          , listen    : curry(2, listen)
          , create    : create
 
-         , sendJson  : sendJson
          , send      : send
+         , sendJson  : sendJson
+         , success   : success
          , notFound  : notFound
          , fail      : fail
          , redirect  : redirect
