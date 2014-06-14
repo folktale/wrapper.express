@@ -36,7 +36,7 @@ Or with Sweet.js macros:
 
 ```js
 var routes = $routes(Express) {
-  get('/:name'): {name} => $do {
+  get('/:name'): {params:{ name }} => $do {
     html <- Future.of('Hello, ' + name)
     return Express.send(html)
   }
