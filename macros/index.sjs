@@ -34,15 +34,25 @@ macro routefn {
     function($param){ return $result }
   }
 
-  rule { $param:ident : { $p ... } => $result:expr } => {
+  rule { $param:ident : { $p ... } => $result:fbody } => {
     function($param) {
       bind $param { $p ... , }
-      return $result
+      $result
     }
   }
 
-  rule { { $p ... } => $result:expr } => {
-    routefn request:{ $p ... } => result
+  rule { { $p ... } => $result } => {
+    routefn request:{ $p ... } => $result
+  }
+}
+
+macro fbody {
+  rule { { $a ... } } => {
+    $a ...
+  }
+
+  rule { $result:expr } => { 
+    return $result;
   }
 }
 
