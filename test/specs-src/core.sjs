@@ -1,4 +1,4 @@
-// Copyright (c) 2014 Quildreen Motta
+// Copyright (c) 2014 Quildreen Motta <quildreen@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation files
@@ -19,14 +19,28 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// This will run the tests in a Node environment, and present the results
-// with the TAP reporter.
-var hifive = require('hifive')
-var tap    = require('hifive-tap')
-var specs  = require('./specs')
+var _ = require('../../')(require('express'))
 
-// If we, for any reason, fail any of the tests, signal that with an
-// error exit status.
-hifive.run(specs, tap()).otherwise(function() {
-  if (typeof process != 'undefined')  process.exit(1)
-})
+module.exports = spec 'Core' {
+  spec 'Settings' {
+    it 'Setting(a, b) should configure the key a to value b' {
+      var app = _.create([_.Component.Setting('a', [1, 2])]);
+      app.get('a') => [1, 2]
+    }
+
+    it '.set(a, b) should work the same way' {
+      var app = _.create([_.set('a', [1, 2])]);
+      app.get('a') => [1, 2]
+    }
+
+    it '.enable(a) should be the same as Setting(a, true)' {
+      var app = _.create([_.enable('a')]);
+      app.get('a') => true
+    }
+
+    it '.disable(a) should be the same as Setting(a, false)' {
+      var app = _.create([_.disable('a')]);
+      app.get('a') => false
+    }
+  }
+}

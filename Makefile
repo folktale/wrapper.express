@@ -43,6 +43,7 @@ $(TEST_BLD)/%.js: $(TEST_DIR)/%.sjs
 	mkdir -p $(dir $@)
 	$(sjs) --readable-names        \
 	       --module alright/macros \
+	       --module hifive/macros  \
 	       --output $@             \
 	       $<
 
@@ -61,11 +62,11 @@ documentation:
 clean-docs:
 	perl -pi -e "s?$$ABSPATH/??g" ./docs/*.html
 
-clean:
-	rm -rf dist build
+clean: $(TGT) $(TEST_TGT) dist
+	rm -rf dist $(TGT) $(TEST_TGT)
 
-test: $(TEST_TGT)
-	node test/tap
+test: $(TGT) $(TEST_TGT)
+	node test/run
 
 package: documentation bundle minify
 	mkdir -p dist/$(PACKAGE)-$(VERSION)

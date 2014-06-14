@@ -1,4 +1,4 @@
-// Copyright (c) 2014 Quildreen Motta
+// Copyright (c) 2014 Quildreen Motta <quildreen@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation files
@@ -19,6 +19,12 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-module.exports = [
-  require('./core')
-]
+var hifive = require('hifive')
+
+hifive.runWithDefaults(require('./specs'), require('hifive-spec')())
+      .fork( function(e) { throw e }
+           , function(report) {
+               if (report.failed.length)  process.exit(1)
+               if (!report.all().length)  process.exit(1)
+               else                       process.exit(0)
+             })
