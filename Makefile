@@ -86,8 +86,11 @@ package: documentation bundle minify
 	cp LICENCE dist/$(PACKAGE)-$(VERSION)
 	cd dist && tar -czf $(PACKAGE)-$(VERSION).tar.gz $(PACKAGE)-$(VERSION)
 
-publish: clean test
+publish:
+	$(MAKE) clean
+	rm -rf node_modules
 	npm install
+	$(MAKE) test
 	npm publish
 
 bump:
