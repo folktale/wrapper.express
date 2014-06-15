@@ -66,6 +66,10 @@ You can [read the documentation online][docs] or build it yourself:
 Then open the file `docs/index.html` in your browser.
 
 
+## Platform
+
+This library requires `express@4.x` and `node@0.10+`.
+
 ## Licence
 
 Copyright (c) 2014 Quildreen Motta.
