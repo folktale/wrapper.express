@@ -4,6 +4,8 @@ browserify = $(bin)/browserify
 jsdoc      = $(bin)/jsdoc
 uglify     = $(bin)/uglifyjs
 VERSION    = $(shell node -e 'console.log(require("./package.json").version)')
+RELATIVE   = 'var p = process, P = require("path"); p.stdout.write(P.relative(P.dirname(P.resolve(p.argv[1])), P.resolve(p.argv[2])))'
+
 
 # -- Configuration -----------------------------------------------------
 PACKGE   = NAME
@@ -38,15 +40,20 @@ $(LIB_DIR)/%.js: $(SRC_DIR)/%.sjs
 	       --module sparkler/macros   \
 	       --output $@                \
 	       $<
+	sed -i 's,"sources":\["$<"\],"sources":\["$(shell node -e $(RELATIVE) "$@" "$<")"\],' $@.map
 
 $(TEST_BLD)/%.js: $(TEST_DIR)/%.sjs
 	mkdir -p $(dir $@)
-	$(sjs) --readable-names        \
-	       --module alright/macros \
-	       --module hifive/macros  \
-	       --output $@             \
+	$(sjs) --readable-names                \
+	       --sourcemap                     \
+	       --module alright/macros         \
+	       --module alright/macros/futures \
+	       --module hifive/macros          \
+	       --module sweet-fantasies/src/do \
+	       --module lambda-chop/macros     \
+	       --output $@                     \
 	       $<
-
+	sed -i 's,"sources":\["$<"\],"sources":\["$(shell node -e $(RELATIVE) "$@" "$<")"\],' $@.map
 
 # -- Tasks -------------------------------------------------------------
 all: $(TGT)
@@ -62,7 +69,7 @@ documentation:
 clean-docs:
 	perl -pi -e "s?$$ABSPATH/??g" ./docs/*.html
 
-clean: $(TGT) $(TEST_TGT) dist
+clean:
 	rm -rf dist $(TGT) $(TEST_TGT)
 
 test: $(TGT) $(TEST_TGT)

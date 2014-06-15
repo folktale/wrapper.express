@@ -26,11 +26,12 @@
  */
 
 // -- Dependencies -----------------------------------------------------
-var adt    = require('adt-simple')
-var curry  = require('core.lambda').curry
-var Future = require('data.future')
-var extend = require('xtend')
-
+var adt     = require('adt-simple')
+var curry   = require('core.lambda').curry
+var compose = require('core.lambda').compose
+var Future  = require('data.future')
+var extend  = require('xtend')
+var methods = require('methods')
 
 // -- Data structures --------------------------------------------------
 
@@ -38,34 +39,38 @@ union Component {
   Setting { name: String, value: * },
   Plugin  { path: *, handler: Function },
   Route   { method: String, spec: *, handler: Function }
-} deriving (adt.Base)
+} deriving (adt.Base, adt.Cata)
 
 union Response {
   Redirect { url: * },
   Send     { status: Number, headers: *, body: Content }
-} deriving (adt.Base)
+} deriving (adt.Base, adt.Cata)
 
 union Content {
   Buffer { value: * },
   Text   { value: * },
   Value  { value: * }
-} deriving (adt.Base)
+} deriving (adt.Base, adt.Cata)
 
 
 // -- Helpers ----------------------------------------------------------
 
-// :: App, Component → Void
-function configure(app, route) { return match route {
-  Setting(name, value)         => app.set(name, value),
-  Plugin(mountPoint, handler)  => app.use(mountPoint, handler),
-  Route(method, spec, handler) => handleRequest(app, method, spec, handler)
-}}
+// :: App, Component → App
+function configure(app, route) {
+  (match route {
+    Setting(name, value)         => app.set(name, value),
+    Plugin(mountPoint, handler)  => app.use(mountPoint, handler),
+    Route(method, spec, handler) => handleRequest(app, method, spec, handler)
+  });
+  return app
+}
 
-// :: App, Method, RouteSpec, (Request → Future[Error, Response]) → Void
+// :: App, Method, RouteSpec, (Request → Future[Error, Response]) → App
 function handleRequest(app, method, spec, handler) {
-  app[method](spec, function(req, res) {
+  app[method.toLowerCase()](spec, function(req, res) {
     handler(req).fork( handleError(req, res)
-                     , sendResponse(req, res)) })
+                     , sendResponse(req, res)) });
+  return app
 }
 
 // :: Request, ExpressResponse → Error → Void
@@ -93,7 +98,11 @@ function wrapServer(server) {
 // :: ExpressResponse, Int, Object, Body → Void
 function _send(res, status, headers, body) {
   res.set(headers || {})
-  res.send(status, body.value)  // currently relying on how Express handles this
+  body.cata({
+    Text   : function(v){ res.send(status, String(v)) },
+    Buffer : function(v){ res.send(status, v) },
+    Value  : function(v){ res.send(status, v) }
+  })
 }
 
 module.exports = function(express) {
@@ -119,11 +128,8 @@ module.exports = function(express) {
   var route = curry(3, Route)
 
   // :: RouteSpec → (Request → Future[Error, Response]) → Component
-  var get    = route('get')
-  var post   = route('post')
-  var put    = route('put')
-  var remove = route('remove')
   var all    = route('all')
+  var remove = route('delete')
 
   // :: ((Request → Future[Error, Response]) → (Request → Future[Error, Response]))
   //  → Component
@@ -148,20 +154,11 @@ module.exports = function(express) {
   }
 
   // :: Object → Response
-  function sendJson(x) {
+  function json(x) {
     return Send( 200
                , { 'Content-Type': 'application/json' }
                , Value(x))
   }
-
-  // :: Body → Response
-  var send     = curry(3, Send);
-  var success  = send(200, { 'Content-Type': 'text/html' })
-  var notFound = send(404, { 'Content-Type': 'text/html' })
-  var fail     = send(500, { 'Content-Type': 'text/html' })
-
-  // :: URL → Response
-  var redirect = Redirect
 
   // :: String → Content
   function text(a) {
@@ -175,39 +172,47 @@ module.exports = function(express) {
   function buffer(a){
     return Buffer(a) }
 
+  // :: Body → Response
+  var send     = curry(3, Send);
+  var success  = compose(send(200, { 'Content-Type': 'text/html' }), text)
+  var notFound = compose(send(404, { 'Content-Type': 'text/html' }), text)
+  var fail     = compose(send(500, { 'Content-Type': 'text/html' }), text)
+
+  // :: URL → Response
+  var redirect = Redirect
+
 
   // -- Exports --------------------------------------------------------
-  return { Component : Component
-         , Response  : Response
-         , Content   : Content
-
-         , set       : set
-         , enable    : enable
-         , disable   : disable
-
-         , plugin    : plugin
-
-         , route     : route
-         , get       : get
-         , post      : post
-         , put       : put
-         , remove    : remove
-         , all       : all
-         , wrap      : curry(2, wrap)
-
-         , listen    : curry(2, listen)
-         , create    : create
-
-         , send      : send
-         , sendJson  : sendJson
-         , success   : success
-         , notFound  : notFound
-         , fail      : fail
-         , redirect  : redirect
-
-         , text      : text
-         , value     : value
-         , buffer    : buffer
-         }
+  var exports = { Component : Component
+                , Response  : Response
+                , Content   : Content
+                
+                , set       : set
+                , enable    : enable
+                , disable   : disable
+                
+                , plugin    : plugin
+                
+                , route     : route
+                , remove    : remove
+                , all       : all
+                , wrap      : curry(2, wrap)
+                
+                , listen    : curry(2, listen)
+                , create    : create
+                
+                , send      : send
+                , json      : json
+                , success   : success
+                , notFound  : notFound
+                , fail      : fail
+                , redirect  : redirect
+                
+                , text      : text
+                , value     : value
+                , buffer    : buffer
+                }
+  methods.forEach(function(m){ exports[m] = route(m) })
+  return exports
 
 }
