@@ -81,5 +81,5 @@ Released under the [MIT licence](https://github.com/folktale/wrapper.express/blo
 [es5-shim]: https://github.com/kriskowal/es5-shim
 [docs]: http://folktale.github.io/wrapper.express
 <!-- [release: https://github.com/folktale/wrapper.express/releases/download/v$VERSION/wrapper.express-$VERSION.tar.gz] -->
-[release]: https://github.com/folktale/wrapper.express/releases/download/v0.0.0/wrapper.express-0.0.0.tar.gz
+[release]: https://github.com/folktale/wrapper.express/releases/download/v0.1.1/wrapper.express-0.1.1.tar.gz
 <!-- [/release] -->
