@@ -1,6 +1,6 @@
 macro $routes {
   rule { $scope:expr { $a ... } } => {
-    [ defroutes $scope { $a ... } ];
+    [ defroutes $scope { $a ... } ]
   }
 }
 
@@ -9,7 +9,7 @@ macro method {
   rule { get }    => { "get" }
   rule { post }   => { "post" }
   rule { put }    => { "put" }
-  rule { remove } => { "remove" }
+  rule { delete } => { "delete" }
   rule { all }    => { "all" }
 }
 
@@ -30,8 +30,8 @@ macro defroutes {
 
 // Destructuring sugar for route handlers
 macro routefn {
-  rule { $param:ident => $result:expr } => {
-    function($param){ return $result }
+  rule { $param:ident => $result:fbody } => {
+    function($param){ $result }
   }
 
   rule { $param:ident : { $p ... } => $result:fbody } => {
@@ -84,14 +84,19 @@ macro bind {
   }
 
   rule { $obj $i [ $id:ident = $init:expr , $p ... ] } => {
+    var $id = $i in $obj? $obj[$i] : $init;
     ++$i;
-    var $id = $i in $obj? $obj[i] : $init;
     bind $obj $i [ $p ... ]
   }
 
-  rule { $obj $i [ ] } => { }
+  rule { $obj $i [ $[...] $id:ident , ] } => {
+    var $id = $obj.slice($i);
+  }
 
+  rule { $obj $i [ ] } => { }
+  rule { $obj $i [ , ] } => { }
   rule { $obj { } } => { }
+  rule { $obj { , } } => { }
 }
 
 

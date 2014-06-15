@@ -51,6 +51,7 @@ $(TEST_BLD)/%.js: $(TEST_DIR)/%.sjs
 	       --module hifive/macros          \
 	       --module sweet-fantasies/src/do \
 	       --module lambda-chop/macros     \
+	       --module ./macros               \
 	       --output $@                     \
 	       $<
 	sed -i 's,"sources":\["$<"\],"sources":\["$(shell node -e $(RELATIVE) "$@" "$<")"\],' $@.map
