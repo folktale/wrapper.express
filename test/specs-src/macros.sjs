@@ -23,8 +23,13 @@ var _        = require('../../')(require('express'))
 var Future   = require('data.future')
 var http     = require('net.http-client')
 var sequence = require('control.monads').sequence
-var methods  = require('methods')
 var $        = require('alright')
+
+var methods = ["checkout","copy","delete","get","head","lock"
+              ,"m-search","merge","mkactivity","mkcol","move"
+              ,"notify","options","patch","post","propfind"
+              ,"proppatch","purge","put","report","search"
+              ,"subscribe","trace","unlock","unsubscribe"]
 
 function check(m, r) {
   return $do {

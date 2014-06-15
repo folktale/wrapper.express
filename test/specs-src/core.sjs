@@ -23,10 +23,15 @@ var _        = require('../../')(require('express'))
 var http     = require('net.http-client')
 var Future   = require('data.future')
 var $        = require('alright')
-var methods  = require('methods')
 var sequence = require('control.monads').sequence
 
 function unary(f){ return function(a) { return f(a) }}
+
+var methods = ["checkout","copy","delete","get","head","lock"
+              ,"m-search","merge","mkactivity","mkcol","move"
+              ,"notify","options","patch","post","propfind"
+              ,"proppatch","purge","put","report","search"
+              ,"subscribe","trace","unlock","unsubscribe"]
 
 var headers = { 'Content-Type': 'text/html' }
 
