@@ -47,7 +47,7 @@ var methods = require('methods')
  * @summary
  * | Setting: { name: String, value: Any }
  * | Plugin:  { path: String, handler: (Request, ExpressRes, (Void → Void) → Void) }
- * | Route:   { method: String, spec: String|RegExp, handler: (Request → Response) }
+ * | Route:   { method: String, spec: String|RegExp, handler: (Request → Future[Error, Response]) }
  */
 union Component {
   Setting { name: String, value: * },
