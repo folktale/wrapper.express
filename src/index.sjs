@@ -134,7 +134,7 @@ function handleError(req, res){ return function(error) {
  * @summary Request, ExpressResponse → Response → Void
  */
 function sendResponse(req, res){ return function {
-  Redirect(url)               => res.redirect(url),
+  Redirect(url)               => res.redirect(url.toString()),
   Send(status, headers, body) => _send(res, status, headers, body)
 }}
 

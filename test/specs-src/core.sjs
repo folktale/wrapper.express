@@ -24,6 +24,7 @@ var http     = require('net.http-client')
 var Future   = require('data.future')
 var $        = require('alright')
 var sequence = require('control.monads').sequence
+var URI      = require('net.uri').URI
 
 function unary(f){ return function(a) { return f(a) }}
 
@@ -227,8 +228,10 @@ module.exports = spec 'Core' {
     }
 
     async 'redirect(u) should redirect to the url.' {
+      var url = URI.fromString('/other')
       var app = _.create([
         _.get('/', function(){ return Future.of(_.redirect('/other')) }),
+        _.get('/one', function(){ return Future.of(_.redirect(url)) }),
         _.get('/other', function(){ return Future.of(_.success('boo')) })
       ])
 
@@ -236,6 +239,8 @@ module.exports = spec 'Core' {
         server <- _.listen(8081, app)
         x <- http.get({}, 'http://localhost:8081')
         Future.of(x.body) will $.equal('boo')
+        y <- http.get({}, 'http://localhost:8081/one')
+        Future.of(y.body) will $.equal('boo')
         server.close()
         return null
       }
