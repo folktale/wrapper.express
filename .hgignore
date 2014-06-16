@@ -6,3 +6,4 @@ npm-debug.log
 docs
 lib
 test/specs
+examples/**/*.js
