@@ -63,7 +63,7 @@ bundle: dist/$(PACKAGE).umd.js
 
 minify: dist/$(PACKAGE).umd.min.js
 
-documentation:
+documentation: all
 	$(jsdoc) --configure jsdoc.conf.json
 	ABSPATH=$(shell cd "$(dirname "$0")"; pwd) $(MAKE) clean-docs
 
