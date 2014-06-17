@@ -45,6 +45,7 @@ var routes = $routes(Express) {
 }
 ```
 
+Check out the `examples/` folder for more examples.
 
 ## Installing
 
