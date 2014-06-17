@@ -56,7 +56,10 @@ environment, you can use [Browserify][]
     
 ## Documentation
 
-You can [read the documentation online][docs] or build it yourself:
+Check out the [Wiki][wiki] for detailed information about the library. There's
+also plenty of [Examples][examples] in the `examples/` folder.
+
+You can [read the API documentation online][docs] or build it yourself:
 
     $ git clone git://github.com/folktale/wrapper.express.git
     $ cd wrapper.express
@@ -84,6 +87,8 @@ Released under the [MIT licence](https://github.com/folktale/wrapper.express/blo
 [Node.js]: http://nodejs.org/
 [es5-shim]: https://github.com/kriskowal/es5-shim
 [docs]: http://folktale.github.io/wrapper.express
+[wiki]: https://github.com/folktale/wrapper.express/wiki
+[examples]: https://github.com/folktale/wrapper.express/tree/master/examples
 <!-- [release: https://github.com/folktale/wrapper.express/releases/download/v$VERSION/wrapper.express-$VERSION.tar.gz] -->
 [release]: https://github.com/folktale/wrapper.express/releases/download/v0.1.2/wrapper.express-0.1.2.tar.gz
 <!-- [/release] -->
