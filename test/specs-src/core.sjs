@@ -25,6 +25,7 @@ var Future   = require('data.future')
 var $        = require('alright')
 var sequence = require('control.monads').sequence
 var URI      = require('net.uri').URI
+var path     = require('path')
 
 function unary(f){ return function(a) { return f(a) }}
 
@@ -56,6 +57,26 @@ module.exports = spec 'Core' {
     it '.disable(a) should be the same as Setting(a, false)' {
       var app = _.create([_.disable('a')]);
       app.get('a') => false
+    }
+  }
+
+  spec 'Engines' {
+    async 'engine(e,h) Should define a new engine for the extension' {
+      var app = _.create([
+        _.set('views', path.join(__dirname, '../views')),
+        _.engine('b', function(p,o,c){ c(null, path.basename(p) + ':' + o.x) }),
+        _.get('/', function(){
+          return Future.of(_.render('a.b', { x: 'c' }))
+        })
+      ])
+
+      return $do {
+        server <- _.listen(8081, app)
+        x <- http.get({}, 'http://localhost:8081')
+        Future.of(x.body) will $.equal('a.b:c')
+        server.close()
+        return null
+      }
     }
   }
 
@@ -241,6 +262,27 @@ module.exports = spec 'Core' {
         Future.of(x.body) will $.equal('boo')
         y <- http.get({}, 'http://localhost:8081/one')
         Future.of(y.body) will $.equal('boo')
+        server.close()
+        return null
+      }
+    }
+
+    async 'render(v,o) should send the rendered view.' {
+      var app = _.create([
+        _.set('views', path.join(__dirname, '../views')),
+        _.set('view engine', 'jade'),
+        _.get('/', function() {
+          return Future.of(_.render('index', { title: 'foo', content: 'bar' }))
+        })
+      ]);
+
+      var page = '<!doctypehtml><html><head><metacharset="utf-8">'
+               + '<title>foo</title></head><body><p>bar</p></body></html>'
+      
+      return $do {
+        server <- _.listen(8081, app)
+        x <- http.get({}, 'http://localhost:8081')
+        Future.of(x.body.toLowerCase().replace(/\s/g,'')) will $.equal(page)
         server.close()
         return null
       }

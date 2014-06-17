@@ -48,11 +48,13 @@ var methods = require('methods')
  * | Setting: { name: String, value: Any }
  * | Plugin:  { path: String, handler: (Request, ExpressRes, (Void → Void) → Void) }
  * | Route:   { method: String, spec: String|RegExp, handler: (Request → Future[Error, Response]) }
+ * | Engine:  { extension: String, engine: (Path, Object, (Error, String → Void) → Void) }
  */
 union Component {
   Setting { name: String, value: * },
   Plugin  { path: String, handler: Function },
-  Route   { method: String, spec: *, handler: Function }
+  Route   { method: String, spec: *, handler: Function },
+  Engine  { extension: String, engine: Function }
 } deriving (adt.Base, adt.Cata)
 
 /**
@@ -61,10 +63,12 @@ union Component {
  * @class
  * @summary
  * | Redirect: { url: URL }
+ * | Render:   { view: String, options: Object }
  * | Send:     { status: Number, headers: Object, body: Content }
  */
 union Response {
   Redirect { url: * },
+  Render   { view: String, options: * },
   Send     { status: Number, headers: *, body: Content }
 } deriving (adt.Base, adt.Cata)
 
@@ -96,6 +100,7 @@ function configure(app, route) {
   (match route {
     Setting(name, value)         => app.set(name, value),
     Plugin(mountPoint, handler)  => app.use(mountPoint, handler),
+    Engine(extension, engine)    => app.engine(extension, engine),
     Route(method, spec, handler) => handleRequest(app, method, spec, handler)
   });
   return app
@@ -135,6 +140,7 @@ function handleError(req, res){ return function(error) {
  */
 function sendResponse(req, res){ return function {
   Redirect(url)               => res.redirect(url.toString()),
+  Render(view, options)       => res.render(view, options),
   Send(status, headers, body) => _send(res, status, headers, body)
 }}
 
@@ -205,6 +211,13 @@ module.exports = function(express) {
     return Setting(name, false)
   }
 
+  /**
+   * Constructs an engine configuration for an Express application.
+   *
+   * @method
+   * @summary String → (Path, Object, (Error, String → Void) → Void)
+   */
+  exports.engine = curry(2, Engine)
 
   /**
    * Constructs a Plugin configuration for an Express application.
@@ -365,6 +378,14 @@ module.exports = function(express) {
    * @summary URL → Response
    */
   exports.redirect = Redirect
+
+  /**
+   * Constructs a render response for a handler.
+   *
+   * @method
+   * @summary String → Object → Response
+   */
+  exports.render = curry(2, Render)
 
 
   // -- Exports --------------------------------------------------------
