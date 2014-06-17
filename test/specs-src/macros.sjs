@@ -176,27 +176,27 @@ module.exports = spec 'Macros' {
     }
 
     it 'Object destructuring' {
-      var app = $routes(_){ get('/'): {a,b,c} => a + b + c };
+      var app = $routes(_){ get('/'): {a,b,c} => (a + b + c) };
       app[0].handler({a:1,b:2,c:3}) => 1+2+3
     }
 
     it 'Renaming' {
-      var app = $routes(_){ get('/'): {a:x,b:y,c:z} => x + y + z };
+      var app = $routes(_){ get('/'): {a:x,b:y,c:z} => (x + y + z) };
       app[0].handler({a:1,b:2,c:3}) => 1+2+3
     }
 
     it 'Deep destructuring' {
-      var app = $routes(_){ get('/'): {a,b:{x},c} => a + x + c };
+      var app = $routes(_){ get('/'): {a,b:{x},c} => (a + x + c) };
       app[0].handler({a:1,b:{x:2,y:3},c:3}) => 1+2+3
     }
 
     it 'Array destructuring' {
-      var app = $routes(_){ get('/'): {a:[b,c],d} => b + c + d };
+      var app = $routes(_){ get('/'): {a:[b,c],d} => (b + c + d) };
       app[0].handler({a:[1,2,3], d:3}) => 1+2+3
     }
 
     it 'Array destructuring with defaults' {
-      var app = $routes(_){ get('/'): {a:[b,c,d=1,e=2]} => b + c + d + e };
+      var app = $routes(_){ get('/'): {a:[b,c,d=1,e=2]} => (b + c + d + e) };
       app[0].handler({a:[1,2,3]}) => 1+2+3+2
     }
 
