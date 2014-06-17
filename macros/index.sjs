@@ -15,13 +15,35 @@ macro method {
 
 // Define routes
 macro defroutes {
+  rule { $scope { set $key = $value } } => {
+    $scope.set($key, $value)
+  }
+  rule { $scope { set $key = $value $a ... } } => {
+    $scope.set($key, $value),
+    defroutes $scope { $a ... }
+  }
+
+  rule { $scope { plugin ( $mount ): $handler } } => {
+    $scope.plugin($mount, $handler)
+  }
+  rule { $scope { plugin ( $mount ): $handler $a ... } } => {
+    $scope.plugin($mount, $handler),
+    defroutes $scope { $a ... }
+  }
+
+  rule { $scope { engine ( $ext ): $handler } } => {
+    $scope.engine($ext, $handler)
+  }
+  rule { $scope { engine ( $ext ): $handler $a ... } } => {
+    $scope.engine($ext, $handler),
+    defroutes $scope { $a ... }
+  }
+
   rule { $scope { $m:method ( $url ): $f:routefn } } => {
     $scope[$m]($url, $f)
   }
-
   rule { $scope { $m:method ( $url ): $f:routefn $a ... } } => {
     $scope[$m]($url, $f),
-
     defroutes $scope { $a ... }
   }
 

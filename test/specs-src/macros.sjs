@@ -210,4 +210,29 @@ module.exports = spec 'Macros' {
       app[0].handler({x:1}) => { x: 1 }
     }
   }
+
+  spec 'Other components' {
+    it 'Setting' {
+      var app = $routes(_){ set 'foo' = 'bar' set 'baz' = 1 };
+      app[0].name => 'foo';
+      app[0].value => 'bar';
+      app[1].name => 'baz';
+      app[1].value => 1;
+    }
+
+    it 'Plugin' {
+      function f(){};
+      var app = $routes(_){ plugin('/'): f };
+      app[0].path => '/';
+      app[0].handler => f;
+    }
+
+    it 'Engine' {
+      function f(){};
+      var app = $routes(_){ engine('a'): f };
+      app[0].extension => 'a';
+      app[0].engine => f;
+    }
+  }
+
 }
