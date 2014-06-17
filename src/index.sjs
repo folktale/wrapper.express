@@ -32,6 +32,7 @@ var compose = require('core.lambda').compose
 var Future  = require('data.future')
 var extend  = require('xtend')
 var methods = require('methods')
+var destructiveExtend = require('xtend/mutable')
 
 // -- Data structures --------------------------------------------------
 
@@ -54,7 +55,8 @@ union Component {
   Setting { name: String, value: * },
   Plugin  { path: String, handler: Function },
   Route   { method: String, spec: *, handler: Function },
-  Engine  { extension: String, engine: Function }
+  Engine  { extension: String, engine: Function },
+  Locals  { value: * }
 } deriving (adt.Base, adt.Cata)
 
 /**
@@ -101,6 +103,7 @@ function configure(app, route) {
     Setting(name, value)         => app.set(name, value),
     Plugin(mountPoint, handler)  => app.use(mountPoint, handler),
     Engine(extension, engine)    => app.engine(extension, engine),
+    Locals(object)               => destructiveExtend(app.locals, object),
     Route(method, spec, handler) => handleRequest(app, method, spec, handler)
   });
   return app
@@ -218,6 +221,14 @@ module.exports = function(express) {
    * @summary String → (Path, Object, (Error, String → Void) → Void)
    */
   exports.engine = curry(2, Engine)
+
+  /**
+   * Constructs a locals configuration for an Express application.
+   *
+   * @method
+   * @summary Object → Component
+   */
+  exports.locals = Locals
 
   /**
    * Constructs a Plugin configuration for an Express application.

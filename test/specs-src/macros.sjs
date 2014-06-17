@@ -233,6 +233,13 @@ module.exports = spec 'Macros' {
       app[0].extension => 'a';
       app[0].engine => f;
     }
+
+    it 'Locals' {
+      var x = 2
+      var app = $routes(_){ locals { a: 1 } locals x };
+      app[0].value => { a: 1 };
+      app[1].value => 2;
+    }
   }
 
 }

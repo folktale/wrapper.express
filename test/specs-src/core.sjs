@@ -78,6 +78,17 @@ module.exports = spec 'Core' {
         return null
       }
     }
+
+    it 'locals should be merged' {
+      var app = _.create([
+        _.locals({ a: 1, b: 2 }),
+        _.locals({ a: 3, c: 4 })
+      ]);
+
+      app.locals.a => 3;
+      app.locals.b => 2;
+      app.locals.c => 4;
+    }
   }
 
   spec 'Plugin' {

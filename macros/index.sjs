@@ -39,6 +39,14 @@ macro defroutes {
     defroutes $scope { $a ... }
   }
 
+  rule { $scope { locals $obj } } => {
+    $scope.locals($obj)
+  }
+  rule { $scope { locals $obj $a ... } } => {
+    $scope.locals($obj),
+    defroutes $scope { $a ... }
+  }
+
   rule { $scope { $m:method ( $url ): $f:routefn } } => {
     $scope[$m]($url, $f)
   }
