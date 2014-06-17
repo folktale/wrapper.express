@@ -65,7 +65,7 @@ union Component {
  * @class
  * @summary
  * | Redirect: { url: URL }
- * | Render:   { view: String, options: Object }
+ * | Render:   { view: Path, options: Object }
  * | Send:     { status: Number, headers: Object, body: Content }
  */
 union Response {
