@@ -1,40 +1,29 @@
-// Copyright (c) 2014 Quildreen Motta <quildreen@gmail.com>
-//
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation files
-// (the "Software"), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge,
-// publish, distribute, sublicense, and/or sell copies of the Software,
-// and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This example will show how to write a simple webservice using the
+// wrapper library. This example provides a simple JSON-based API with a
+// few authenticated endpoints.
 
-/**
- * A simple web service.
- *
- * @module examples/webservice
- */
-
-// -- Dependencies -----------------------------------------------------
+// As always, we need to first load the modules we depend on.
 var Express = require('wrapper.express')(require('express'))
 var Future  = require('data.future')
 var compose = require('core.lambda').compose
 
+// The wrapper library provides some convenience methods for sending
+// responses, but they assume that the content will be a String
+// containing HTML (which is the common case). Fortunately it's easy
+// enough to create your own convenience functions by way of partial
+// application and function composition.
 var success  = compose(Express.send(200, {}), Express.value)
 var fail     = compose(Express.send(500, {}), Express.value)
 
+function error(status, message) {
+  return Express.send(status, {}, Express.value({ error: message }))
+}
 
-// -- Helpers ----------------------------------------------------------
+
+
+// Below we define some of the data that our webservice will work with,
+// in a real application this would probably come from a database or
+// something.
 var api_keys = ['red-queen', 'white-rabbit']
 
 var users = [ { name: 'alice' }
@@ -49,10 +38,32 @@ function isValid(key) {
   return api_keys.indexOf(key) != -1
 }
 
-function error(status, message) {
-  return Express.send(status, {}, Express.value({ error: message }))
-}
 
+// Now we can configure the routes that our webservice will respond to.
+var api_routes = $routes(Express) {
+  // For `GET /api/users` we'll have it return all users in the database.
+  get('/api/users'): req =>
+    Future.of(success(users))
+
+  // And for `GET /api/user/:name/likes` we'll have it either return the
+  // things that user likes, or a 404 error (properly formated as a JSON
+  // response).
+  get('/api/user/:name/likes'): { params: {name} } =>
+      name in likes?   Future.of(success(likes[name]))
+    : /* Otherwise */  Future.of(error(404, "Oh, my! I can't find it!"))
+
+// But these routes are not accessible for everyone, they require the
+// user to be authenticated in order to access the resources. To do so,
+// we just wrap every route in the API and do some checks before
+// proceeding.
+}.map(function(route) {
+  return Express.wrap(checkApiKey, route)
+})
+
+// The wrapper function is just something that takes in a handler, and
+// returns a new route handler. This one will verify if a key was
+// provided, and if it is a valid key, before calling the original
+// handler to serve the resource.
 function checkApiKey(handle) { return function(request) {
   var key = request.query['api-key']
 
@@ -61,41 +72,28 @@ function checkApiKey(handle) { return function(request) {
   :      /* otherwise */   handle(request)
 }}
 
-function unary(f){ return function(a) {
-  return f(a)
-}}
-
-
-// -- Configuration ----------------------------------------------------
-
-// These are the authenticated routes for the API.
-var api_routes = $routes(Express) {
-  get('/api/users'): req =>
-    Future.of(success(users))
-
-  get('/api/user/:name/likes'): { params: {name} } =>
-      name in likes?   Future.of(success(likes[name]))
-    : /* Otherwise */  Future.of(error(404, "Oh, my! I can't find it!"))
-
-// We need to validate the API key for these routes, so we do it by
-// wrapping every handler:
-}.map(unary(Express.wrap(checkApiKey)))
-
-// These are the routes that should get called if nothing else works,
-// as such, they should be placed last in the list of routes.
+// We also want to send a 404 response properly formatted as JSON
+// whenever the user access an endpoint that our service doesn't know
+// about, since Express' default response isn't.
+//
+// We can either drop down to Express' plugins, or define a "catch-all"
+// route, so here we'll do the latter (see the express' examples to see
+// how to use plugins for this).
 var fallback_routes = $routes(Express) {
   all('/*'): req =>
     Future.of(error(404, "No such thing."))
 }
 
-// All routes for this application
+// We then combine all of the components for this webserver in order to
+// create an express application, making sure our catch-all route has
+// the least precedence (comes last), as we want to try all defined
+// routes first.
 var routes = api_routes.concat(fallback_routes)
+var app    = Express.create(routes)
 
 
-// -- Running ----------------------------------------------------------
-Express.listen(8080, Express.create(routes)).fork(
+// Finally, we bind the application to a port and run it.
+Express.listen(8080, app).fork(
   function(error) { throw error }
 , function(server){ console.log('Server started on port: ' + server.address.port) }
 )
-
-  
