@@ -91,5 +91,5 @@ Released under the [MIT licence](https://github.com/folktale/wrapper.express/blo
 [wiki]: https://github.com/folktale/wrapper.express/wiki
 [examples]: https://github.com/folktale/wrapper.express/tree/master/examples
 <!-- [release: https://github.com/folktale/wrapper.express/releases/download/v$VERSION/wrapper.express-$VERSION.tar.gz] -->
-[release]: https://github.com/folktale/wrapper.express/releases/download/v0.2.0/wrapper.express-0.2.0.tar.gz
+[release]: https://github.com/folktale/wrapper.express/releases/download/v0.2.1/wrapper.express-0.2.1.tar.gz
 <!-- [/release] -->
