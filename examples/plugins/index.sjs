@@ -1,42 +1,30 @@
-// Copyright (c) 2014 Quildreen Motta <quildreen@gmail.com>
-//
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation files
-// (the "Software"), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge,
-// publish, distribute, sublicense, and/or sell copies of the Software,
-// and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This is an example of how you can use express plugins with the
+// wrapper library. To do so, this example will use the `static` plugin,
+// which serves static files from a directory.
 
-/**
- * An example of how to use Express' plugins.
- *
- * @module examples/plugins
- */
-
-// -- Dependencies -----------------------------------------------------
+// To begin, we'll load some of the modules this server depends
+// on.
 var _static = require('express').static
 var Express = require('wrapper.express')(require('express'))
 var Future  = require('data.future')
 
+// Then we'll construct the components that define the plugins.
+var specs = $routes(Express) {
+  // The wrapper always requires the mount-point of a plugin to be
+  // defined.
 
-// -- Configuring ------------------------------------------------------
-var specs = [
-  Express.plugin('/', _static(__dirname + '/public'))
-]
+  // `plugin('/'): f` is the same as express's `app.use(f)`, so if you
+  // need a plugin to be defined for all routes (as is the case here),
+  // just bind it to the root URL.
+  plugin('/'): _static(__dirname + '/public')
 
-// -- Running ----------------------------------------------------------
+  // Plugins are assembled in the order they appear in the component list,
+  // and plugins that are defined first have a higher precedence (they're
+  // tried first).
+}
+
+// Lastly, we assemble the Express application and bind it to a
+// particular port.
 Express.listen(8080, Express.create(specs)).fork(
   function(error) { throw error }
 , function(server){ console.log('Server started on port: ' + server.address.port) }
