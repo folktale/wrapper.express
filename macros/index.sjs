@@ -15,26 +15,26 @@ macro method {
 
 // Define routes
 macro defroutes {
-  rule { $scope { set $key = $value } } => {
+  rule { $scope { set $key = $value:expr } } => {
     $scope.set($key, $value)
   }
-  rule { $scope { set $key = $value $a ... } } => {
+  rule { $scope { set $key = $value:expr $a ... } } => {
     $scope.set($key, $value),
     defroutes $scope { $a ... }
   }
 
-  rule { $scope { plugin ( $mount ): $handler } } => {
+  rule { $scope { plugin ( $mount ): $handler:expr } } => {
     $scope.plugin($mount, $handler)
   }
-  rule { $scope { plugin ( $mount ): $handler $a ... } } => {
+  rule { $scope { plugin ( $mount ): $handler:expr $a ... } } => {
     $scope.plugin($mount, $handler),
     defroutes $scope { $a ... }
   }
 
-  rule { $scope { engine ( $ext ): $handler } } => {
+  rule { $scope { engine ( $ext ): $handler:expr } } => {
     $scope.engine($ext, $handler)
   }
-  rule { $scope { engine ( $ext ): $handler $a ... } } => {
+  rule { $scope { engine ( $ext ): $handler:expr $a ... } } => {
     $scope.engine($ext, $handler),
     defroutes $scope { $a ... }
   }
@@ -71,7 +71,10 @@ macro routefn {
     }
   }
 
-  rule { { $p ... } => $result } => {
+  rule { { $p ... } => { $a ... } } => {
+    routefn request:{ $p ... } => { $a ... }
+  }
+  rule { { $p ... } => $result:expr } => {
     routefn request:{ $p ... } => $result
   }
 }
@@ -80,7 +83,6 @@ macro fbody {
   rule { { $a ... } } => {
     $a ...
   }
-
   rule { $result:expr } => { 
     return $result;
   }

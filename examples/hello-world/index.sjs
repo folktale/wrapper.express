@@ -25,11 +25,11 @@ var redirect = Express.redirect
 var routes = $routes(Express) {
   // A `GET /` route will just redirect the user to `/World`
   get('/'): req =>
-    (Future.of(redirect('/World')))
+    Future.of(redirect('/World'))
 
   // A `GET /:SOMETHING` route will output the text `Hello, SOMETHING`
   get('/:name'): {params: { name }} =>
-    (Future.of(success('Hello, ' + name + '!')))
+    Future.of(success('Hello, ' + name + '!'))
 }
 
 
