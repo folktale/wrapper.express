@@ -1,49 +1,44 @@
-// Copyright (c) 2014 Quildreen Motta <quildreen@gmail.com>
-//
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation files
-// (the "Software"), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge,
-// publish, distribute, sublicense, and/or sell copies of the Software,
-// and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// Let's start with the simplest example: the Hello World.
 
-/**
- * A simple hello world server.
- *
- * @module examples/helloworld
- */
-
-// -- Dependencies -----------------------------------------------------
+// First, we'll need to load some modules we depend on. The
+// `wrapper.express` module is a function that takes in an Express
+// module and returns a wrapper for that Express module.
+// This allows one to have their code work with different versions
+// of the `express` library, rather than be tied to a specific one.
 var Express = require('wrapper.express')(require('express'))
-var Future  = require('data.future')
 
+// For representing the asynchronous actions, the library uses
+// the `Future` monad, so we'll also need to load it.
+var Future = require('data.future')
+
+// Finally, we create some aliases for things we'd probably end
+// up using too often, so they're easier to read.
 var success  = Express.success
 var redirect = Express.redirect
 
-// -- Configuration ----------------------------------------------------
-var routes = $routes(Express) {
-  get('/'): req =>
-    Future.of(redirect('/World'))
 
+// With the dependencies part taken care of, we can proceed to the
+// configuration part. Here's where we'll define the routes for
+// our webserver, and how each one of them will get handled.
+//
+// This webserver will have two routes:
+var routes = $routes(Express) {
+  // A `GET /` route will just redirect the user to `/World`
+  get('/'): req =>
+    (Future.of(redirect('/World')))
+
+  // A `GET /:SOMETHING` route will output the text `Hello, SOMETHING`
   get('/:name'): {params: { name }} =>
-    Future.of(success('Hello, ' + name + '!'))
+    (Future.of(success('Hello, ' + name + '!')))
 }
 
 
-// -- Running ----------------------------------------------------------
-Express.listen(8080, Express.create(routes)).fork(
+// Finally, we take our routing definitions and create an Express
+// application by assembling all the components:
+var app = Express.create(routes)
+
+// And we run this application by binding it to a specific port:
+Express.listen(8080, app).fork(
   function(error) { throw error }
 , function(server){ console.log('Server started on port: ' + server.address.port) }
 )
