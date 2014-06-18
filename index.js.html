@@ -107,6 +107,7 @@ var compose = require('core.lambda').compose;
 var Future = require('data.future');
 var extend = require('xtend');
 var methods = require('methods');
+var destructiveExtend = require('xtend/mutable');
 // -- Data structures --------------------------------------------------
 /**
  * Represents a server's configuration.
@@ -120,7 +121,8 @@ var methods = require('methods');
  * @summary
  * | Setting: { name: String, value: Any }
  * | Plugin:  { path: String, handler: (Request, ExpressRes, (Void → Void) → Void) }
- * | Route:   { method: String, spec: String|RegExp, handler: (Request → Response) }
+ * | Route:   { method: String, spec: String|RegExp, handler: (Request → Future[Error, Response]) }
+ * | Engine:  { extension: String, engine: (Path, Object, (Error, String → Void) → Void) }
  */
 var Component = function () {
         function Component$2() {
@@ -173,6 +175,31 @@ var Component = function () {
         }
         Route$2.prototype = new Component$2();
         Route$2.prototype.constructor = Route$2;
+        function Engine$2(extension, engine) {
+            if (!(this instanceof Engine$2)) {
+                return new Engine$2(extension, engine);
+            }
+            if (typeof extension === 'string' || Object.prototype.toString.call(extension) === '[object String]') {
+                this.extension = extension;
+            } else {
+                throw new TypeError('Unexpected type for field: Component.Engine.extension');
+            }
+            if (Object.prototype.toString.call(engine) === '[object Function]') {
+                this.engine = engine;
+            } else {
+                throw new TypeError('Unexpected type for field: Component.Engine.engine');
+            }
+        }
+        Engine$2.prototype = new Component$2();
+        Engine$2.prototype.constructor = Engine$2;
+        function Locals$2(value) {
+            if (!(this instanceof Locals$2)) {
+                return new Locals$2(value);
+            }
+            this.value = value;
+        }
+        Locals$2.prototype = new Component$2();
+        Locals$2.prototype.constructor = Locals$2;
         var derived = adt.Cata.derive(adt.Base.derive({
                 name: 'Component',
                 constructor: Component$2,
@@ -205,23 +232,43 @@ var Component = function () {
                             'spec',
                             'handler'
                         ]
+                    },
+                    {
+                        name: 'Engine',
+                        constructor: Engine$2,
+                        prototype: Engine$2.prototype,
+                        fields: [
+                            'extension',
+                            'engine'
+                        ]
+                    },
+                    {
+                        name: 'Locals',
+                        constructor: Locals$2,
+                        prototype: Locals$2.prototype,
+                        fields: ['value']
                     }
                 ]
             }));
         Component$2.Setting = derived.variants[0].constructor;
         Component$2.Plugin = derived.variants[1].constructor;
         Component$2.Route = derived.variants[2].constructor;
+        Component$2.Engine = derived.variants[3].constructor;
+        Component$2.Locals = derived.variants[4].constructor;
         return Component$2;
     }();
 var Setting = Component.Setting;
 var Plugin = Component.Plugin;
 var Route = Component.Route;
+var Engine = Component.Engine;
+var Locals = Component.Locals;
 /**
  * Represents the response from a route handler.
  *
  * @class
  * @summary
  * | Redirect: { url: URL }
+ * | Render:   { view: Path, options: Object }
  * | Send:     { status: Number, headers: Object, body: Content }
  */
 var Response = function () {
@@ -235,6 +282,19 @@ var Response = function () {
         }
         Redirect$2.prototype = new Response$2();
         Redirect$2.prototype.constructor = Redirect$2;
+        function Render$2(view, options) {
+            if (!(this instanceof Render$2)) {
+                return new Render$2(view, options);
+            }
+            if (typeof view === 'string' || Object.prototype.toString.call(view) === '[object String]') {
+                this.view = view;
+            } else {
+                throw new TypeError('Unexpected type for field: Response.Render.view');
+            }
+            this.options = options;
+        }
+        Render$2.prototype = new Response$2();
+        Render$2.prototype.constructor = Render$2;
         function Send$2(status, headers, body) {
             if (!(this instanceof Send$2)) {
                 return new Send$2(status, headers, body);
@@ -265,6 +325,15 @@ var Response = function () {
                         fields: ['url']
                     },
                     {
+                        name: 'Render',
+                        constructor: Render$2,
+                        prototype: Render$2.prototype,
+                        fields: [
+                            'view',
+                            'options'
+                        ]
+                    },
+                    {
                         name: 'Send',
                         constructor: Send$2,
                         prototype: Send$2.prototype,
@@ -277,10 +346,12 @@ var Response = function () {
                 ]
             }));
         Response$2.Redirect = derived.variants[0].constructor;
-        Response$2.Send = derived.variants[1].constructor;
+        Response$2.Render = derived.variants[1].constructor;
+        Response$2.Send = derived.variants[2].constructor;
         return Response$2;
     }();
 var Redirect = Response.Redirect;
+var Render = Response.Render;
 var Send = Response.Send;
 /**
  * Represents the body of a response.
@@ -374,12 +445,25 @@ function configure(app, route) {
             var mountPoint = r17, handler = r18;
             return app.use(mountPoint, handler);
         }
-        var r19 = Route.unapply(a0);
-        if (r19 != null &amp;&amp; r19.length === 3) {
+        var r19 = Engine.unapply(a0);
+        if (r19 != null &amp;&amp; r19.length === 2) {
             var r20 = r19[0];
             var r21 = r19[1];
-            var r22 = r19[2];
-            var method = r20, spec = r21, handler = r22;
+            var extension = r20, engine = r21;
+            return app.engine(extension, engine);
+        }
+        var r22 = Locals.unapply(a0);
+        if (r22 != null &amp;&amp; r22.length === 1) {
+            var r23 = r22[0];
+            var object = r23;
+            return destructiveExtend(app.locals, object);
+        }
+        var r24 = Route.unapply(a0);
+        if (r24 != null &amp;&amp; r24.length === 3) {
+            var r25 = r24[0];
+            var r26 = r24[1];
+            var r27 = r24[2];
+            var method = r25, spec = r26, handler = r27;
             return handleRequest(app, method, spec, handler);
         }
         throw new TypeError('No match');
@@ -426,14 +510,21 @@ function sendResponse(req, res) {
         if (r13 != null &amp;&amp; r13.length === 1) {
             var r14 = r13[0];
             var url = r14;
-            return res.redirect(url);
+            return res.redirect(url.toString());
         }
-        var r15 = Send.unapply(a0);
-        if (r15 != null &amp;&amp; r15.length === 3) {
+        var r15 = Render.unapply(a0);
+        if (r15 != null &amp;&amp; r15.length === 2) {
             var r16 = r15[0];
             var r17 = r15[1];
-            var r18 = r15[2];
-            var status = r16, headers = r17, body = r18;
+            var view = r16, options = r17;
+            return res.render(view, options);
+        }
+        var r18 = Send.unapply(a0);
+        if (r18 != null &amp;&amp; r18.length === 3) {
+            var r19 = r18[0];
+            var r20 = r18[1];
+            var r21 = r18[2];
+            var status = r19, headers = r20, body = r21;
             return _send(res, status, headers, body);
         }
         throw new TypeError('No match');
@@ -496,6 +587,7 @@ module.exports = function (express) {
    * @method
    * @summary Name → Component
    */
+    exports.enable = enable;
     function enable(name) {
         return Setting(name, true);
     }
@@ -505,9 +597,24 @@ module.exports = function (express) {
    * @method
    * @summary Name → Component
    */
+    exports.disable = disable;
     function disable(name) {
         return Setting(name, false);
     }
+    /**
+   * Constructs an engine configuration for an Express application.
+   *
+   * @method
+   * @summary String → (Path, Object, (Error, String → Void) → Void)
+   */
+    exports.engine = curry(2, Engine);
+    /**
+   * Constructs a locals configuration for an Express application.
+   *
+   * @method
+   * @summary Object → Component
+   */
+    exports.locals = Locals;
     /**
    * Constructs a Plugin configuration for an Express application.
    *
@@ -670,6 +777,13 @@ module.exports = function (express) {
    * @summary URL → Response
    */
     exports.redirect = Redirect;
+    /**
+   * Constructs a render response for a handler.
+   *
+   * @method
+   * @summary String → Object → Response
+   */
+    exports.render = curry(2, Render);
     // -- Exports --------------------------------------------------------
     exports.Component = Component;
     exports.Response = Response;
@@ -700,7 +814,7 @@ module.exports = function (express) {
 					
 		<span class="jsdoc-message">
 		Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha8</a>
-		on Mon Jun 16 2014 12:59:44 GMT-0300 (BRT) using the <a href="https://github.com/terryweiss/docstrap">DocStrap template</a>.
+		on Tue Jun 17 2014 23:45:41 GMT-0300 (BRT) using the <a href="https://github.com/terryweiss/docstrap">DocStrap template</a>.
 		</span>
 				</footer>
 			</div>
