@@ -43,8 +43,8 @@
     "net.http-client": "^0.2.1",
     "net.uri": "^0.1.6",
     "sparkler": "^0.2.1",
-    "sweet-fantasies": "git://github.com/robotlolita/sweet-fantasies#062eeb56080546709c4af16cf0df985fd49e8f4b",
-    "sweet.js": "0.6.0",
+    "sweet-fantasies": "git://github.com/robotlolita/sweet-fantasies#patch-compatibility",
+    "sweet.js": "~0.7.1",
     "uglify-js": "^2.4.3",
     "data.maybe": "~1.1.0"
   },
