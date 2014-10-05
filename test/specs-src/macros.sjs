@@ -21,6 +21,7 @@
 
 var _        = require('../../')(require('express'))
 var Future   = require('data.future')
+var Maybe    = require('data.maybe')
 var http     = require('net.http-client')
 var sequence = require('control.monads').sequence
 var $        = require('alright')
@@ -48,7 +49,7 @@ module.exports = spec 'Macros' {
       };
 
       return $do {
-        server <- _.listen(8081, _.create(app))
+        server <- _.listen(Maybe.of(8081), _.create(app))
         check('get', 'a')
         server.close()
         return null
@@ -61,7 +62,7 @@ module.exports = spec 'Macros' {
       };
 
       return $do {
-        server <- _.listen(8081, _.create(app))
+        server <- _.listen(Maybe.of(8081), _.create(app))
         check('post', 'a')
         server.close()
         return null
@@ -74,7 +75,7 @@ module.exports = spec 'Macros' {
       };
 
       return $do {
-        server <- _.listen(8081, _.create(app))
+        server <- _.listen(Maybe.of(8081), _.create(app))
         check('put', 'a')
         server.close()
         return null
@@ -87,7 +88,7 @@ module.exports = spec 'Macros' {
       };
 
       return $do {
-        server <- _.listen(8081, _.create(app))
+        server <- _.listen(Maybe.of(8081), _.create(app))
         check('delete', 'a')
         server.close()
         return null
@@ -100,7 +101,7 @@ module.exports = spec 'Macros' {
       };
 
       return $do {
-        server <- _.listen(8081, _.create(app))
+        server <- _.listen(Maybe.of(8081), _.create(app))
         sequence(Future, methods.map(λ(x) -> check(x, '')))
         server.close()
         return null
@@ -115,7 +116,7 @@ module.exports = spec 'Macros' {
       };
 
       return $do {
-        server <- _.listen(8081, _.create(app))
+        server <- _.listen(Maybe.of(8081), _.create(app))
         check('get', 'a') check('post', 'a') check('put', 'a')
         server.close()
         return null

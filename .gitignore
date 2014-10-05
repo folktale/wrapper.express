@@ -3,3 +3,6 @@ node_modules
 dist
 npm-debug.log
 docs
+lib
+test/specs
+examples/**/*.js

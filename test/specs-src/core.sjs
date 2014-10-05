@@ -22,6 +22,7 @@
 var _        = require('../../')(require('express'))
 var http     = require('net.http-client')
 var Future   = require('data.future')
+var Maybe    = require('data.maybe')
 var $        = require('alright')
 var sequence = require('control.monads').sequence
 var URI      = require('net.uri').URI
@@ -60,6 +61,30 @@ module.exports = spec 'Core' {
     }
   }
 
+  spec 'Servers' {
+    async 'listen(Nothing, server) should bind to any available port.' {
+      var app = _.create([]);
+
+      return $do {
+        server <- _.listen(Maybe.Nothing(), app)
+        Future.of(server.address.port) will $.haveClass('Number')
+        server.close()
+        return null
+      }
+    }
+
+    async 'listen(Maybe.of(x), server) should bind to X port.' {
+      var app = _.create([]);
+
+      return $do {
+        server <- _.listen(Maybe.of(8081), app)
+        Future.of(server.address.port) will $.equal(8081)
+        server.close()
+        return null
+      }
+    }
+  }
+
   spec 'Engines' {
     async 'engine(e,h) Should define a new engine for the extension' {
       var app = _.create([
@@ -71,7 +96,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http.get({}, 'http://localhost:8081')
         Future.of(x.body) will $.equal('a.b:c')
         server.close()
@@ -101,7 +126,7 @@ module.exports = spec 'Core' {
       ]);
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         http.get({}, 'http://localhost:8081')
         Future.of(xs) will $.equal([1])
         http.get({}, 'http://localhost:8081/foo')
@@ -120,7 +145,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http.get({}, 'http://localhost:8081/a')
         Future.of(x.body) will $.equal('a')
         y <- http.get({}, 'http://localhost:8081/b')
@@ -137,7 +162,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         sequence(Future, methods.map(check))
         server.close()
         return null
@@ -156,7 +181,7 @@ module.exports = spec 'Core' {
       var app = _.create(methods.map(function(m){ return _[m]('/', f) }))
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         sequence(Future, methods.map(check))
         server.close()
         return null
@@ -175,7 +200,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http('delete', {}, 'http://localhost:8081')
         Future.of(x.body) will $.equal('a')
         server.close()
@@ -193,7 +218,7 @@ module.exports = spec 'Core' {
       }}))))
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         http.get({}, 'http://localhost:8081')
         Future.of(x) will $.equal('wrapped')
         server.close()
@@ -209,7 +234,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http.get({}, 'http://localhost:8081')
         Future.of(JSON.parse(x.body)) will $.equal({ a: 1 })
         server.close()
@@ -223,7 +248,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http.get({}, 'http://localhost:8081')
         Future.of(x.response.status) will $.equal(200)
         server.close()
@@ -237,7 +262,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http.get({}, 'http://localhost:8081')
         Future.of(x.response.status) will $.equal(404)
         server.close()
@@ -251,7 +276,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http.get({}, 'http://localhost:8081')
         Future.of(x.response.status) will $.equal(500)
         server.close()
@@ -268,7 +293,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http.get({}, 'http://localhost:8081')
         Future.of(x.body) will $.equal('boo')
         y <- http.get({}, 'http://localhost:8081/one')
@@ -291,7 +316,7 @@ module.exports = spec 'Core' {
                + '<title>foo</title></head><body><p>bar</p></body></html>'
       
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http.get({}, 'http://localhost:8081')
         Future.of(x.body.toLowerCase().replace(/\s/g,'')) will $.equal(page)
         server.close()
@@ -306,7 +331,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http.get({}, 'http://localhost:8081')
         Future.of(x.body) will $.equal('boo')
         server.close()
@@ -321,7 +346,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http.get({}, 'http://localhost:8081')
         Future.of(JSON.parse(x.body)) will $.equal({ a: 1 })
         server.close()
@@ -337,7 +362,7 @@ module.exports = spec 'Core' {
       ])
 
       return $do {
-        server <- _.listen(8081, app)
+        server <- _.listen(Maybe.of(8081), app)
         x <- http.get({}, 'http://localhost:8081')
         Future.of(x.body) will $.equal('foo')
         server.close()

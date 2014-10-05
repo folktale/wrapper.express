@@ -284,13 +284,14 @@ module.exports = function(express) {
    * Binds an Express server to a particular port.
    *
    * @method
-   * @summary Int → App → Future[Error, Server]
+   * @summary Maybe[Int] → App → Future[Error, Server]
    */
   exports.listen = curry(2, listen)
   function listen(port, server) { return new Future(function(reject, resolve) {
-    var s = server.listen(port, function(error) {
-                                  if (error)  reject(error)
-                                  else        delayedResolve(this.address()) })
+    var s = server.listen( port.getOrElse(null)
+                         , function(error) {
+                             if (error)  reject(error)
+                             else        delayedResolve(this.address()) })
 
     function delayedResolve(addr) { setTimeout(function() {
       resolve(extend(wrapServer(s), { address: addr })) })}
