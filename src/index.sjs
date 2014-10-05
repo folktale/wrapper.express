@@ -132,7 +132,7 @@ function handleRequest(app, method, spec, handler) {
 function handleError(req, res){ return function(error) {
   console.log(error.toString())
   if (error instanceof Response)  sendResponse(req, res)(error)
-  else                            res.send(500, error)
+  else                            res.status(500).send(error)
 }}
 
 /**
@@ -156,9 +156,9 @@ function sendResponse(req, res){ return function {
 function _send(res, status, headers, body) {
   res.set(headers || {})
   body.cata({
-    Text   : function(v){ res.send(status, String(v)) },
-    Buffer : function(v){ res.send(status, v) },
-    Value  : function(v){ res.send(status, v) }
+    Text   : function(v){ res.status(status).send(String(v)) },
+    Buffer : function(v){ res.status(status).send(v) },
+    Value  : function(v){ res.status(status).send(v) }
   })
 }
 
