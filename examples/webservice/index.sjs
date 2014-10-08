@@ -5,6 +5,7 @@
 // As always, we need to first load the modules we depend on.
 var Express = require('wrapper.express')(require('express'))
 var Future  = require('data.future')
+var Maybe   = require('data.maybe')
 var compose = require('core.lambda').compose
 
 // The wrapper library provides some convenience methods for sending
@@ -93,7 +94,7 @@ var app    = Express.create(routes)
 
 
 // Finally, we bind the application to a port and run it.
-Express.listen(8080, app).fork(
+Express.listen(Maybe.of(8080), app).fork(
   function(error) { throw error }
 , function(server){ console.log('Server started on port: ' + server.address.port) }
 )

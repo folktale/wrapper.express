@@ -7,6 +7,7 @@
 var _static = require('express').static
 var Express = require('wrapper.express')(require('express'))
 var Future  = require('data.future')
+var Maybe   = require('data.maybe')
 
 // Then we'll construct the components that define the plugins.
 var specs = $routes(Express) {
@@ -25,7 +26,7 @@ var specs = $routes(Express) {
 
 // Lastly, we assemble the Express application and bind it to a
 // particular port.
-Express.listen(8080, Express.create(specs)).fork(
+Express.listen(Maybe.of(8080), Express.create(specs)).fork(
   function(error) { throw error }
 , function(server){ console.log('Server started on port: ' + server.address.port) }
 )

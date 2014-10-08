@@ -11,6 +11,13 @@ var Express = require('wrapper.express')(require('express'))
 // the `Future` monad, so we'll also need to load it.
 var Future = require('data.future')
 
+// When binding the server to a port, we can choose to bind it to a
+// specific port number, or let the library find some available port for
+// us. This intent is captured with a `Maybe` value, where a `Just` tag
+// marks a specific port, and the `Nothing` tag is used for letting the
+// library decide.
+var Maybe  = require('data.maybe')
+
 // Finally, we create some aliases for things we'd probably end
 // up using too often, so they're easier to read.
 var success  = Express.success
@@ -38,7 +45,7 @@ var routes = $routes(Express) {
 var app = Express.create(routes)
 
 // And we run this application by binding it to a specific port:
-Express.listen(8080, app).fork(
+Express.listen(Maybe.of(8080), app).fork(
   function(error) { throw error }
 , function(server){ console.log('Server started on port: ' + server.address.port) }
 )
